@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  super_user
+  admin
+}
+
+enum RecurrencePattern {
+  daily
+  weekly
+  monthly
+}
+
+model Company {
+  id        String     @id @default(uuid())
+  name      String
+  logo      String?    @db.Text
+  color     String     @default("#5C6BC0")
+  locations Location[]
+  users     User[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  @@map("companies")
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String?        @map("password_hash")
+  firstName    String         @map("first_name")
+  lastName     String         @map("last_name")
+  role         Role           @default(user)
+  color        String         @default("#1976D2")
+  weekStartDay       Int            @default(0) @map("week_start_day")
+  mustChangePassword Boolean        @default(false) @map("must_change_password")
+  temporaryPassword  String?        @map("temporary_password")
+  companyId          String         @map("company_id")
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  locations    UserLocation[]
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@map("users")
+}
+
+model Location {
+  id        String         @id @default(uuid())
+  name      String
+  companyId String         @map("company_id")
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  rooms     Room[]
+  users     UserLocation[]
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  @@map("locations")
+}
+
+model Room {
+  id         String    @id @default(uuid())
+  name       String
+  locationId String    @map("location_id")
+  location   Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("rooms")
+}
+
+model UserLocation {
+  userId     String   @map("user_id")
+  locationId String   @map("location_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, locationId])
+  @@index([userId, locationId])
+  @@map("user_locations")
+}
+
+model Booking {
+  id                String             @id @default(uuid())
+  roomId            String             @map("room_id")
+  room              Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId            String             @map("user_id")
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime         DateTime           @map("start_time") @db.Timestamptz
+  endTime           DateTime           @map("end_time") @db.Timestamptz
+  isRecurring       Boolean            @default(false) @map("is_recurring")
+  recurrencePattern RecurrencePattern? @map("recurrence_pattern")
+  recurrenceEndDate DateTime?          @map("recurrence_end_date") @db.Timestamptz
+  parentBookingId   String?            @map("parent_booking_id")
+  parentBooking     Booking?           @relation("RecurringBookings", fields: [parentBookingId], references: [id], onDelete: Cascade)
+  childBookings     Booking[]          @relation("RecurringBookings")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  @@index([roomId, startTime, endTime])
+  @@index([userId])
+  @@map("bookings")
+}

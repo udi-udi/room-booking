@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "companies" ADD COLUMN IF NOT EXISTS "color" TEXT NOT NULL DEFAULT '#5C6BC0';
