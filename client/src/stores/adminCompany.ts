@@ -25,8 +25,6 @@ export const useAdminCompanyStore = defineStore('adminCompany', () => {
   watch(selectedCompanyId, (id) => {
     if (id) {
       localStorage.setItem('adminSelectedCompanyId', id)
-    } else {
-      localStorage.removeItem('adminSelectedCompanyId')
     }
   })
 
@@ -70,7 +68,7 @@ export const useAdminCompanyStore = defineStore('adminCompany', () => {
     selectedCompanyId.value = null
     selectedCompanyDetail.value = null
     initialized.value = false
-    localStorage.removeItem('adminSelectedCompanyId')
+    // Keep adminSelectedCompanyId in localStorage so the last company is restored on next login
   }
 
   return {

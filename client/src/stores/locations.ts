@@ -39,7 +39,7 @@ export const useLocationsStore = defineStore('locations', () => {
   function reset() {
     locations.value = []
     selectedLocationId.value = null
-    localStorage.removeItem('selectedLocationId')
+    // Keep selectedLocationId in localStorage so the last location is restored on next login
   }
 
   return {
