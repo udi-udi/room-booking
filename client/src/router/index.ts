@@ -51,6 +51,10 @@ const router = createRouter({
       component: () => import('@/components/admin/AdminDashboard.vue'),
       meta: { requiresAuth: true, roles: ['admin'] },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/',
+    },
   ],
 })
 
