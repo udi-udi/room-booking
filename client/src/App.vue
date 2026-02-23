@@ -29,6 +29,7 @@ const userColorPick = ref('#1976D2')
 const userFirstName = ref('')
 const userLastName = ref('')
 const userWeekStartDay = ref(0)
+const userLanguage = ref(locale.value)
 
 // Forced initial password setup
 const initialPassword = ref('')
@@ -129,6 +130,7 @@ watch(() => authStore.user, (u) => {
     userFirstName.value = u.firstName || ''
     userLastName.value = u.lastName || ''
     userWeekStartDay.value = u.weekStartDay ?? 0
+    userLanguage.value = locale.value
   }
 }, { immediate: true })
 
@@ -176,6 +178,7 @@ async function saveUserProps() {
       color: userColorPick.value,
       weekStartDay: userWeekStartDay.value,
     })
+    setLanguage(userLanguage.value)
     await authStore.refreshProfile()
     userPropsDialog.value = false
     // Refresh calendar bookings so the new color/name shows immediately
@@ -246,20 +249,6 @@ async function savePassword() {
 
         <v-spacer />
 
-        <v-select
-          :model-value="locale"
-          :items="languageOptions"
-          item-title="title"
-          item-value="value"
-          variant="solo-filled"
-          density="compact"
-          hide-details
-          rounded="pill"
-          class="lang-select me-2 topbar-select"
-          bg-color="rgba(255,255,255,0.15)"
-          @update:model-value="setLanguage"
-        />
-
         <!-- User settings -->
         <v-btn icon variant="text" class="me-1" @click="userPropsDialog = true">
           <v-avatar size="28" :color="authStore.user?.color || '#1976D2'">
@@ -293,6 +282,15 @@ async function savePassword() {
                     v-model="userLastName"
                     :label="t('auth.lastName')"
                     density="compact"
+                    class="mb-2"
+                  />
+                  <v-select
+                    v-model="userLanguage"
+                    :items="languageOptions"
+                    item-title="title"
+                    item-value="value"
+                    :label="t('app.language')"
+                    density="compact"
                   />
                 </v-card-text>
                 <v-card-actions>
@@ -310,7 +308,7 @@ async function savePassword() {
                     :items="weekStartDayOptions"
                     :label="t('admin.weekStartDay')"
                     density="compact"
-                    class="mb-4"
+                    class="mb-2"
                   />
                   <div class="text-subtitle-2 mb-2">{{ t('admin.myColor') }}</div>
                   <v-color-picker
@@ -512,10 +510,6 @@ async function savePassword() {
   flex: 0 1 220px;
 }
 
-.lang-select {
-  max-width: 130px;
-  flex: 0 1 130px;
-}
 
 </style>
 
