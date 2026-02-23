@@ -15,6 +15,7 @@ const props = defineProps<{
   startTime: Date
   endTime?: Date | null
   locationId: string
+  loading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -150,6 +151,7 @@ function handleConfirm() {
   <v-dialog
     :model-value="modelValue"
     max-width="440"
+    :persistent="props.loading"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <v-card class="pa-2">
@@ -207,10 +209,10 @@ function handleConfirm() {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" rounded="lg" @click="emit('update:modelValue', false)">
+        <v-btn variant="text" rounded="lg" :disabled="props.loading" @click="emit('update:modelValue', false)">
           {{ t('booking.cancelAction') }}
         </v-btn>
-        <v-btn color="primary" variant="flat" rounded="lg" @click="handleConfirm">
+        <v-btn color="primary" variant="flat" rounded="lg" :loading="props.loading" :disabled="props.loading" @click="handleConfirm">
           {{ t('booking.confirm') }}
         </v-btn>
       </v-card-actions>

@@ -10,6 +10,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
 import LocationSelector from '@/components/layout/LocationSelector.vue'
+import { isColorBright } from '@/utils/colorUtils'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -88,6 +89,15 @@ const companyName = computed(() => {
   }
   return authStore.user?.company?.name || ''
 })
+
+const companyColor = computed(() => {
+  if (authStore.isAdmin && adminCompanyStore.selectedCompanyDetail?.color) {
+    return adminCompanyStore.selectedCompanyDetail.color
+  }
+  return authStore.user?.company?.color || '#1976D2'
+})
+const companyTextColor = computed(() => isColorBright(companyColor.value) ? '#000000' : '#ffffff')
+const userInitialsColor = computed(() => isColorBright(authStore.user?.color || '#1976D2') ? '#000000' : '#ffffff')
 
 // Apply company color as theme primary
 function applyCompanyColor() {
@@ -206,7 +216,7 @@ async function savePassword() {
 <template>
   <v-app :rtl="isRtl">
     <template v-if="authStore.isAuthenticated">
-      <v-app-bar color="primary" density="comfortable" elevation="0" class="app-bar-rounded">
+      <v-app-bar color="primary" density="comfortable" elevation="0" class="app-bar-rounded" :style="{ '--topbar-text-color': companyTextColor }">
         <!-- Company logo or name -->
         <template #prepend>
           <img
@@ -215,10 +225,10 @@ async function savePassword() {
             alt="Company Logo"
             class="company-logo ms-3"
           />
-          <span v-else class="company-name ms-3 font-weight-bold text-white">{{ companyName }}</span>
+          <span v-else class="company-name ms-3 font-weight-bold" :style="{ color: companyTextColor }">{{ companyName }}</span>
         </template>
 
-        <LocationSelector class="ms-4" />
+        <LocationSelector class="ms-4 topbar-select" />
 
         <!-- Admin company selector -->
         <v-select
@@ -230,7 +240,7 @@ async function savePassword() {
           hide-details
           variant="solo-filled"
           rounded="pill"
-          class="admin-company-select ms-4"
+          class="admin-company-select ms-4 topbar-select"
           bg-color="rgba(255,255,255,0.15)"
         />
 
@@ -245,7 +255,7 @@ async function savePassword() {
           density="compact"
           hide-details
           rounded="pill"
-          class="lang-select me-2"
+          class="lang-select me-2 topbar-select"
           bg-color="rgba(255,255,255,0.15)"
           @update:model-value="setLanguage"
         />
@@ -253,7 +263,7 @@ async function savePassword() {
         <!-- User settings -->
         <v-btn icon variant="text" class="me-1" @click="userPropsDialog = true">
           <v-avatar size="28" :color="authStore.user?.color || '#1976D2'">
-            <span class="text-white text-caption font-weight-bold">
+            <span class="text-caption font-weight-bold" :style="{ color: userInitialsColor }">
               {{ (authStore.user?.firstName?.[0] || '').toUpperCase() }}
             </span>
           </v-avatar>
@@ -505,5 +515,16 @@ async function savePassword() {
 .lang-select {
   max-width: 130px;
   flex: 0 1 130px;
+}
+
+</style>
+
+<style>
+.topbar-select .v-select__selection-text,
+.topbar-select .v-field__input input,
+.topbar-select .v-field__append-inner .v-icon,
+.topbar-select .v-label,
+.topbar-select .v-field-label {
+  color: var(--topbar-text-color) !important;
 }
 </style>

@@ -9,6 +9,7 @@ import { useNotificationStore } from '@/stores/notification'
 import BookingModal from './BookingModal.vue'
 import type { Booking } from '@/types/booking.types'
 import type { Room } from '@/types/location.types'
+import { isColorBright } from '@/utils/colorUtils'
 
 const { t, locale } = useI18n()
 const locationsStore = useLocationsStore()
@@ -180,6 +181,35 @@ function bookingSpan(booking: Booking): number {
   return Math.round(durationMs / (15 * 60 * 1000))
 }
 
+function invertColor(hex: string): string {
+  const color = hex.replace('#', '')
+  const r = 255 - parseInt(color.slice(0, 2), 16)
+  const g = 255 - parseInt(color.slice(2, 4), 16)
+  const b = 255 - parseInt(color.slice(4, 6), 16)
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+function getBookingChipStyle(booking: Booking): Record<string, string> {
+  const height = `${bookingSpan(booking) * 28}px`
+  const color = isColorBright(booking.user.color) ? '#000000' : '#ffffff'
+  if (booking.isRecurring) {
+    return { height, backgroundColor: booking.user.color, color }
+  }
+  const stripeColor = invertColor(booking.user.color)
+  return {
+    height,
+    color,
+    '--chip-bg': booking.user.color,
+    background: `repeating-linear-gradient(
+      -45deg,
+      ${stripeColor} 0px,
+      ${stripeColor} 1px,
+      transparent 1px,
+      transparent 12px
+    ), ${booking.user.color}`,
+  }
+}
+
 // Drag-to-select state
 const isDragging = ref(false)
 const dragRoom = ref<Room | null>(null)
@@ -283,6 +313,7 @@ function resetDrag() {
 
 // Booking modal
 const showBookingModal = ref(false)
+const bookingLoading = ref(false)
 const selectedRoom = ref<Room | null>(null)
 const selectedStartTime = ref(new Date())
 const selectedEndTime = ref<Date | null>(null)
@@ -295,6 +326,7 @@ async function handleBookingConfirm(data: {
   recurrencePattern?: 'weekly'
   userId?: string
 }) {
+  bookingLoading.value = true
   try {
     await bookingsStore.createBooking(data)
     showBookingModal.value = false
@@ -302,6 +334,8 @@ async function handleBookingConfirm(data: {
     loadBookings()
   } catch {
     // Error toast handled by API interceptor
+  } finally {
+    bookingLoading.value = false
   }
 }
 
@@ -431,7 +465,7 @@ function isToday(day: Date): boolean {
               <template v-if="getBookingAt(room, selectedDay, slot) && isFirstSlotOfBooking(getBookingAt(room, selectedDay, slot)!, selectedDay, slot)">
                 <div
                   class="booking-chip"
-                  :style="{ height: `${bookingSpan(getBookingAt(room, selectedDay, slot)!) * 28}px`, backgroundColor: getBookingAt(room, selectedDay, slot)!.user.color }"
+                  :style="getBookingChipStyle(getBookingAt(room, selectedDay, slot)!)"
                   @click.stop="canDeleteBooking(getBookingAt(room, selectedDay, slot)!) ? openCancelDialog(getBookingAt(room, selectedDay, slot)!) : null"
                 >
                   <span class="booking-chip-text">
@@ -462,6 +496,7 @@ function isToday(day: Date): boolean {
       :start-time="selectedStartTime"
       :end-time="selectedEndTime"
       :location-id="locationsStore.selectedLocationId ?? ''"
+      :loading="bookingLoading"
       @confirm="handleBookingConfirm"
     />
 
@@ -623,16 +658,16 @@ function isToday(day: Date): boolean {
 }
 
 .booking-chip-text {
-  color: #fff;
   font-weight: 700;
   font-size: 0.85rem;
   text-align: center;
-  padding: 0 6px;
+  padding: 3px 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: block;
-  width: 100%;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  max-width: 100%;
+  background-color: var(--chip-bg);
+  border-radius: 10px;
 }
 </style>
