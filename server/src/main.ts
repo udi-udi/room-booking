@@ -25,9 +25,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
 
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN', 'http://localhost:5173'),
-    credentials: true,
-  })
+    origin: '*',
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Room Booking API')
