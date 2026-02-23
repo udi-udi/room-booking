@@ -562,7 +562,8 @@ function isToday(day: Date): boolean {
 }
 
 .calendar-scroll-wrapper {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: calc(100vh - 260px);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -580,10 +581,15 @@ function isToday(day: Date): boolean {
   text-align: center;
   min-height: 36px;
   color: #5C6BC0;
+  position: sticky;
+  top: 0;
+  z-index: 4;
 }
 
 .calendar-header-corner {
   border-start-start-radius: 0;
+  inset-inline-start: 0;
+  z-index: 5;
 }
 
 .calendar-time-cell {
@@ -595,6 +601,10 @@ function isToday(day: Date): boolean {
   min-height: 28px;
   line-height: 28px;
   font-size: 0.75rem;
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 3;
+  background: #fff;
 }
 
 .calendar-cell {
