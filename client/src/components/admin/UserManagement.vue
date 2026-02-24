@@ -230,10 +230,11 @@ async function handleResetPassword() {
   resettingPassword.value = true
   try {
     const result = await userService.resetPassword(resetPasswordTargetUser.value.id)
+    const targetEmail = resetPasswordTargetUser.value.email
     resetPasswordDialog.value = false
     resetPasswordTargetUser.value = null
     otpValue.value = result.temporaryPassword
-    otpEmail.value = resetPasswordTargetUser.value?.email ?? ''
+    otpEmail.value = targetEmail
     otpDialog.value = true
     await fetchUsers()
   } catch {
