@@ -32,6 +32,18 @@ onMounted(async () => {
     authStore.setTokens(accessToken, refreshToken)
     await authStore.initialize()
     router.replace('/calendar')
+    return
+  }
+
+  // Magic link auto-login
+  const magicEmail = route.query.email as string
+  const magicPassword = route.query.password as string
+  if (magicEmail && magicPassword) {
+    email.value = magicEmail
+    password.value = magicPassword
+    // Clean URL params before login so they don't stay in history
+    router.replace('/login')
+    await handleLogin()
   }
 })
 

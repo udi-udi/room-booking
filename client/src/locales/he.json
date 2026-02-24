@@ -115,7 +115,10 @@
     "resetPasswordConfirm": "האם אתה בטוח שברצונך לאפס את הסיסמה עבור",
     "temporaryPassword": "סיסמה זמנית",
     "temporaryPasswordHint": "מסור סיסמה זו למשתמש. הוא יתבקש לשנות אותה בהתחברות הראשונה.",
-    "passwordCopied": "הסיסמה הועתקה ללוח"
+    "loginLinkHint": "שלח קישור זה למשתמש. הוא יתחבר אוטומטית ויתבקש להגדיר סיסמה.",
+    "passwordCopied": "הסיסמה הועתקה ללוח",
+    "copyLoginLink": "העתק קישור התחברות",
+    "linkCopied": "קישור התחברות הועתק!"
   },
   "common": {
     "loading": "טוען...",

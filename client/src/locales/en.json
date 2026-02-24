@@ -115,7 +115,10 @@
     "resetPasswordConfirm": "Are you sure you want to reset the password for",
     "temporaryPassword": "Temporary Password",
     "temporaryPasswordHint": "Give this password to the user. They will be asked to change it on first login.",
-    "passwordCopied": "Password copied to clipboard"
+    "loginLinkHint": "Send this link to the user. They will be automatically logged in and prompted to set their password.",
+    "passwordCopied": "Password copied to clipboard",
+    "copyLoginLink": "Copy login link",
+    "linkCopied": "Login link copied!"
   },
   "common": {
     "loading": "Loading...",

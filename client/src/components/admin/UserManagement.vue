@@ -52,6 +52,7 @@ const resettingPassword = ref(false)
 // OTP dialog (shows temporary password after invite or reset)
 const otpDialog = ref(false)
 const otpValue = ref('')
+const otpEmail = ref('')
 
 // Delete dialog
 const deleteDialog = ref(false)
@@ -101,10 +102,17 @@ async function fetchUsers() {
 
 async function fetchLocations() {
   try {
-    allLocations.value = await locationService.getLocations()
+    const companyId = authStore.isAdmin ? adminCompanyStore.selectedCompanyId || undefined : undefined
+    allLocations.value = await locationService.getLocations(companyId)
   } catch {
     // Non-critical
   }
+}
+
+function copyLoginLink(user: ManagedUser) {
+  const url = `${window.location.origin}/login?email=${encodeURIComponent(user.email)}&password=${encodeURIComponent(user.temporaryPassword!)}`
+  navigator.clipboard.writeText(url)
+  notificationStore.showSuccess(t('admin.linkCopied'))
 }
 
 function openInvite() {
@@ -128,6 +136,7 @@ async function handleInvite() {
     inviteDialog.value = false
     if (result.temporaryPassword) {
       otpValue.value = result.temporaryPassword
+      otpEmail.value = result.email
       otpDialog.value = true
     }
     await fetchUsers()
@@ -224,6 +233,7 @@ async function handleResetPassword() {
     resetPasswordDialog.value = false
     resetPasswordTargetUser.value = null
     otpValue.value = result.temporaryPassword
+    otpEmail.value = resetPasswordTargetUser.value?.email ?? ''
     otpDialog.value = true
     await fetchUsers()
   } catch {
@@ -233,8 +243,12 @@ async function handleResetPassword() {
   }
 }
 
+function otpLoginUrl() {
+  return `${window.location.origin}/login?email=${encodeURIComponent(otpEmail.value)}&password=${encodeURIComponent(otpValue.value)}`
+}
+
 function copyOtp() {
-  navigator.clipboard.writeText(otpValue.value)
+  navigator.clipboard.writeText(otpLoginUrl())
   notificationStore.showSuccess(t('admin.passwordCopied'))
 }
 
@@ -308,7 +322,13 @@ function roleLabel(role: string) {
             </v-chip>
           </td>
           <td>
-            <code v-if="user.temporaryPassword" class="text-body-2">{{ user.temporaryPassword }}</code>
+            <div v-if="user.temporaryPassword" class="d-flex align-center ga-1">
+              <code class="text-body-2">{{ user.temporaryPassword }}</code>
+              <v-btn icon size="x-small" variant="text" @click="copyLoginLink(user)">
+                <v-icon size="16">mdi-link-variant</v-icon>
+                <v-tooltip activator="parent" location="top">{{ t('admin.copyLoginLink') }}</v-tooltip>
+              </v-btn>
+            </div>
             <span v-else class="text-grey text-caption">—</span>
           </td>
           <td class="text-center">
@@ -529,13 +549,13 @@ function roleLabel(role: string) {
     </v-dialog>
 
     <!-- Temporary Password (OTP) Dialog -->
-    <v-dialog v-model="otpDialog" max-width="450">
+    <v-dialog v-model="otpDialog" max-width="500">
       <v-card>
         <v-card-title>{{ t('admin.temporaryPassword') }}</v-card-title>
         <v-card-text>
-          <p class="mb-4 text-body-2">{{ t('admin.temporaryPasswordHint') }}</p>
+          <p class="mb-4 text-body-2">{{ t('admin.loginLinkHint') }}</p>
           <v-text-field
-            :model-value="otpValue"
+            :model-value="otpLoginUrl()"
             readonly
             variant="outlined"
             density="compact"
