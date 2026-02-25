@@ -118,7 +118,8 @@
     "loginLinkHint": "Send this link to the user. They will be automatically logged in and prompted to set their password.",
     "passwordCopied": "Password copied to clipboard",
     "copyLoginLink": "Copy login link",
-    "linkCopied": "Login link copied!"
+    "linkCopied": "Login link copied!",
+    "emailSent": "Login link sent to {email}"
   },
   "common": {
     "loading": "Loading...",

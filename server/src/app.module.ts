@@ -10,6 +10,7 @@ import { BookingsModule } from './bookings/bookings.module'
 import { UsersModule } from './users/users.module'
 import { CompanyModule } from './company/company.module'
 import { AdminModule } from './admin/admin.module'
+import { MailModule } from './mail/mail.module'
 import { LoggerMiddleware } from './common/middleware/logger.middleware'
 
 @Module({
@@ -24,6 +25,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware'
     UsersModule,
     CompanyModule,
     AdminModule,
+    MailModule,
   ],
   providers: [
     {

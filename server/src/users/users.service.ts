@@ -8,6 +8,7 @@ import {
 import * as bcrypt from 'bcrypt'
 import { randomBytes } from 'crypto'
 import { PrismaService } from '../prisma/prisma.service.js'
+import { MailService } from '../mail/mail.service.js'
 import { CreateUserDto } from './dto/create-user.dto.js'
 import { UpdateUserDto } from './dto/update-user.dto.js'
 
@@ -27,7 +28,10 @@ function randomUserColor(): string {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async findAll(companyId: string, role: string, filterCompanyId?: string) {
     let where: { companyId?: string } = { companyId }
@@ -52,7 +56,7 @@ export class UsersService {
     })
   }
 
-  async invite(dto: CreateUserDto, companyId: string) {
+  async invite(dto: CreateUserDto, companyId: string, origin: string) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } })
     if (existing) {
       throw new ConflictException('Email already registered')
@@ -61,7 +65,7 @@ export class UsersService {
     const temporaryPassword = generateOtp()
     const passwordHash = await bcrypt.hash(temporaryPassword, 10)
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
@@ -84,8 +88,22 @@ export class UsersService {
         createdAt: true,
         temporaryPassword: true,
         locations: { select: { locationId: true } },
+        company: { select: { name: true } },
       },
     })
+
+    const loginUrl = `${origin}/login?email=${encodeURIComponent(dto.email)}&password=${encodeURIComponent(temporaryPassword)}`
+
+    await this.mailService.sendLoginLink({
+      to: dto.email,
+      firstName: dto.firstName,
+      companyName: user.company?.name ?? '',
+      email: dto.email,
+      temporaryPassword,
+      loginUrl,
+    })
+
+    return user
   }
 
   async update(id: string, dto: UpdateUserDto, companyId: string, requestRole: string) {
@@ -162,8 +180,11 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } })
   }
 
-  async resetPassword(id: string, companyId: string, requestRole: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } })
+  async resetPassword(id: string, companyId: string, requestRole: string, origin: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { company: true },
+    })
     if (!user) throw new NotFoundException('User not found')
     if (requestRole !== 'admin' && user.companyId !== companyId) {
       throw new ForbiddenException('Cannot reset password for user from another company')
@@ -178,6 +199,17 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id },
       data: { passwordHash, mustChangePassword: true, temporaryPassword },
+    })
+
+    const loginUrl = `${origin}/login?email=${encodeURIComponent(user.email)}&password=${encodeURIComponent(temporaryPassword)}`
+
+    await this.mailService.sendLoginLink({
+      to: user.email,
+      firstName: user.firstName,
+      companyName: user.company?.name ?? '',
+      email: user.email,
+      temporaryPassword,
+      loginUrl,
     })
 
     return { temporaryPassword }

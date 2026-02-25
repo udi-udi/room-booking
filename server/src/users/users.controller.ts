@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   UseGuards,
   Request,
 } from '@nestjs/common'
@@ -48,10 +49,11 @@ export class UsersController {
   async invite(
     @Body() dto: CreateUserDto & { companyId?: string },
     @Request() req: { user: AuthUser },
+    @Headers('origin') origin: string,
   ) {
     // Admin can invite to a specific company; super_user always invites to own company
     const targetCompanyId = req.user.role === 'admin' && dto.companyId ? dto.companyId : req.user.companyId
-    const user = await this.usersService.invite(dto, targetCompanyId)
+    const user = await this.usersService.invite(dto, targetCompanyId, origin)
     return user
   }
 
@@ -81,8 +83,9 @@ export class UsersController {
   async resetPassword(
     @Param('id') id: string,
     @Request() req: { user: AuthUser },
+    @Headers('origin') origin: string,
   ) {
-    return this.usersService.resetPassword(id, req.user.companyId, req.user.role)
+    return this.usersService.resetPassword(id, req.user.companyId, req.user.role, origin)
   }
 
   @Put(':id/locations')
