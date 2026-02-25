@@ -6,9 +6,30 @@ interface SendLoginLinkParams {
   to: string
   firstName: string
   companyName: string
+  companyColor: string
   email: string
   temporaryPassword: string
   loginUrl: string
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const clean = hex.replace('#', '')
+  const full = clean.length === 3
+    ? clean.split('').map((c) => c + c).join('')
+    : clean
+  return {
+    r: parseInt(full.slice(0, 2), 16),
+    g: parseInt(full.slice(2, 4), 16),
+    b: parseInt(full.slice(4, 6), 16),
+  }
+}
+
+// Returns '#ffffff' or '#000000' for readable contrast on the given background
+function contrastColor(hex: string): string {
+  const { r, g, b } = hexToRgb(hex)
+  // Perceived luminance (WCAG formula)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.55 ? '#000000' : '#ffffff'
 }
 
 @Injectable()
@@ -29,7 +50,8 @@ export class MailService {
   }
 
   async sendLoginLink(params: SendLoginLinkParams): Promise<void> {
-    const { to, firstName, companyName, email, temporaryPassword, loginUrl } = params
+    const { to, firstName, companyName, companyColor, email, temporaryPassword, loginUrl } = params
+    const textColor = contrastColor(companyColor)
 
     const html = `
 <!DOCTYPE html>
@@ -46,8 +68,8 @@ export class MailService {
 
           <!-- Header -->
           <tr>
-            <td style="background:#1976D2;padding:32px 40px;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;">Room Booking System</h1>
+            <td style="background:${companyColor};padding:32px 40px;">
+              <h1 style="margin:0;color:${textColor};font-size:22px;font-weight:600;">Room Booking System</h1>
             </td>
           </tr>
 
@@ -63,8 +85,8 @@ export class MailService {
               <!-- CTA button -->
               <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
                 <tr>
-                  <td style="background:#1976D2;border-radius:6px;">
-                    <a href="${loginUrl}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
+                  <td style="background:${companyColor};border-radius:6px;">
+                    <a href="${loginUrl}" style="display:inline-block;padding:14px 32px;color:${textColor};font-size:15px;font-weight:600;text-decoration:none;">
                       Log In &amp; Set Password
                     </a>
                   </td>
@@ -83,7 +105,7 @@ export class MailService {
                 </tr>
                 <tr>
                   <td style="padding:4px 0;font-size:14px;color:#555;">Login URL:</td>
-                  <td style="padding:4px 0;font-size:14px;"><a href="${loginUrl.split('?')[0]}" style="color:#1976D2;word-break:break-all;">${loginUrl.split('?')[0]}</a></td>
+                  <td style="padding:4px 0;font-size:14px;"><a href="${loginUrl.split('?')[0]}" style="word-break:break-all;">${loginUrl.split('?')[0]}</a></td>
                 </tr>
               </table>
 
@@ -112,8 +134,8 @@ export class MailService {
               <!-- CTA button (Hebrew) -->
               <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
                 <tr>
-                  <td style="background:#1976D2;border-radius:6px;">
-                    <a href="${loginUrl}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
+                  <td style="background:${companyColor};border-radius:6px;">
+                    <a href="${loginUrl}" style="display:inline-block;padding:14px 32px;color:${textColor};font-size:15px;font-weight:600;text-decoration:none;">
                       כניסה והגדרת סיסמה
                     </a>
                   </td>
@@ -132,7 +154,7 @@ export class MailService {
                 </tr>
                 <tr>
                   <td style="padding:4px 0;font-size:14px;color:#555;">קישור כניסה:</td>
-                  <td style="padding:4px 0;font-size:14px;"><a href="${loginUrl.split('?')[0]}" style="color:#1976D2;word-break:break-all;">${loginUrl.split('?')[0]}</a></td>
+                  <td style="padding:4px 0;font-size:14px;"><a href="${loginUrl.split('?')[0]}" style="word-break:break-all;">${loginUrl.split('?')[0]}</a></td>
                 </tr>
               </table>
 

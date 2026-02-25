@@ -88,7 +88,7 @@ export class UsersService {
         createdAt: true,
         temporaryPassword: true,
         locations: { select: { locationId: true } },
-        company: { select: { name: true } },
+        company: { select: { name: true, color: true } },
       },
     })
 
@@ -98,6 +98,7 @@ export class UsersService {
       to: dto.email,
       firstName: dto.firstName,
       companyName: user.company?.name ?? '',
+      companyColor: user.company?.color ?? '#5C6BC0',
       email: dto.email,
       temporaryPassword,
       loginUrl,
@@ -207,6 +208,7 @@ export class UsersService {
       to: user.email,
       firstName: user.firstName,
       companyName: user.company?.name ?? '',
+      companyColor: user.company?.color ?? '#5C6BC0',
       email: user.email,
       temporaryPassword,
       loginUrl,
